@@ -25,9 +25,11 @@ export default class AppleFnLockExtension extends Extension {
         });
         this._button.add_child(this._icon);
 
-        this._switch = new PopupMenu.PopupSwitchMenuItem('Mode multimédia', false);
+        this._switch = new PopupMenu.PopupSwitchMenuItem('Fn Lock', false);
         this._switch.connect('toggled', (_item, locked) => this._setLocked(locked));
         this._button.menu.addMenuItem(this._switch);
+        this._mode = new PopupMenu.PopupMenuItem('Mode multimédia', {reactive: false, can_focus: false});
+        this._button.menu.addMenuItem(this._mode);
         this._status = new PopupMenu.PopupMenuItem('Connexion au service…', {reactive: false, can_focus: false});
         this._button.menu.addMenuItem(this._status);
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
@@ -60,7 +62,8 @@ export default class AppleFnLockExtension extends Extension {
         const online = Boolean(this._proxy?.g_name_owner);
         const available = online && Boolean(this._proxy.Available);
         const locked = available && Boolean(this._proxy.Locked);
-        this._switch.label.text = locked ? 'Mode F1-F12' : 'Mode multimédia';
+        this._mode.label.text = locked ? 'Mode F1-F12' : 'Mode multimédia';
+        this._mode.visible = available;
         this._switch.setToggleState(locked);
         this._switch.sensitive = available && !this._pending;
         this._status.visible = !available || !this._proxy.KeyboardConnected ||
@@ -120,6 +123,7 @@ export default class AppleFnLockExtension extends Extension {
         this._button?.destroy();
         this._button = null;
         this._switch = null;
+        this._mode = null;
         this._status = null;
         this._icon = null;
         this._cancellable = null;
