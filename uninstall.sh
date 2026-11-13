@@ -11,7 +11,7 @@ fi
 
 sudo "$project_dir/scripts/uninstall-system.sh"
 gnome-extensions disable "$extension_id" 2>/dev/null || true
-for file in extension.js metadata.json interface.xml; do
+for file in extension.js metadata.json interface.xml stylesheet.css fn-key-symbolic.svg; do
     rm -f -- "$extension_dir/$file"
 done
 if [ -d "$extension_dir" ]; then rmdir -- "$extension_dir"; fi

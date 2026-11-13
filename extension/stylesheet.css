@@ -1,0 +1,14 @@
+.apple-fn-lock-icon {
+    icon-size: 18px;
+    opacity: 0.72;
+}
+
+.apple-fn-lock-icon.apple-fn-lock-enabled {
+    color: #78aeed;
+    opacity: 1;
+}
+
+.apple-fn-lock-icon.apple-fn-lock-unavailable {
+    color: #d9ac63;
+    opacity: 0.65;
+}

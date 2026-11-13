@@ -52,10 +52,17 @@ class Proxy extends Signals {
 }
 const Gio = {
     Cancellable: RealGio.Cancellable,
-    DBus: {system: {}, makeProxyWrapper() { return Proxy; }},
+    FileIcon: class {},
+    DBus: {system: {}},
+    DBusProxy: {},
     DBusProxyFlags: {DO_NOT_AUTO_START: 4},
     DBusCallFlags: {NONE: 0},
 };
+// Preserve the host's real API shape; do not invent a deprecated helper.
+const proxyFactoryOwner = typeof RealGio.DBusProxy.makeProxyWrapper === 'function'
+    ? 'DBusProxy' : 'DBus';
+assert(typeof RealGio[proxyFactoryOwner].makeProxyWrapper === 'function', 'Real GJS proxy factory exists');
+Gio[proxyFactoryOwner].makeProxyWrapper = () => Proxy;
 const St = {Label: Widget, Icon: Widget, BoxLayout: Widget};
 const Clutter = {ActorAlign: {CENTER: 0}};
 const Main = {panel: {addToStatusArea() {}}, notify() {}};
@@ -76,7 +83,9 @@ const ExtensionClass = new Function('Clutter', 'Gio', 'GLib', 'St', 'Extension',
 
 const extension = new ExtensionClass();
 extension.enable();
-assert(extension._label.text === 'Fn ?', 'Offline indicator');
+assert(extension._icon.style_class.includes('unavailable'), 'Offline indicator');
+assert(extension._button.children.length === 1 && extension._button.children[0] === extension._icon,
+    'Panel contains one compact icon');
 assert(!extension._switch.sensitive, 'Offline switch disabled');
 queue.shift()();
 lastProxy.g_name_owner = ':1.10';
@@ -85,12 +94,12 @@ lastProxy.KeyboardConnected = true;
 lastProxy.Locked = false;
 lastProxy.Mode = 3;
 lastProxy.emit('g-properties-changed');
-assert(extension._label.text === 'Fn', 'Auto mode shows media keys');
+assert(extension._icon.style_class === 'system-status-icon apple-fn-lock-icon', 'Media mode uses neutral icon');
 assert(extension._switch.sensitive, 'Online switch enabled');
 lastProxy.Mode = 2;
 lastProxy.Locked = true;
 lastProxy.emit('g-properties-changed');
-assert(extension._label.text === 'F1–F12', 'Locked indicator');
+assert(extension._icon.style_class.includes('enabled'), 'Locked icon receives accent color');
 assert(extension._switch.state, 'Switch follows external double-tap');
 extension._switch.emit('toggled', false);
 assert(lastProxy.lastCall[0] === 'SetLocked' && lastProxy.lastCall[1][0] === false, 'Narrow D-Bus write');
@@ -102,7 +111,7 @@ lastProxy.emit('g-properties-changed');
 assert(extension._status.label.text.includes('non détecté'), 'Missing keyboard status');
 lastProxy.g_name_owner = null;
 lastProxy.emit('notify::g-name-owner');
-assert(extension._label.text === 'Fn ?', 'Service disappearance reflected');
+assert(extension._icon.style_class.includes('unavailable'), 'Service disappearance reflected');
 const button = extension._button;
 extension.disable();
 assert(button.destroyed && lastProxy.signals.size === 0, 'Disable removes widgets and proxy handlers');

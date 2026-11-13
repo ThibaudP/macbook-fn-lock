@@ -23,6 +23,8 @@ sudo "$project_dir/scripts/install-system.sh"
 install -d -m 755 "$extension_dir"
 install -m 644 "$project_dir/extension/extension.js" "$extension_dir/extension.js"
 install -m 644 "$project_dir/extension/metadata.json" "$extension_dir/metadata.json"
+install -m 644 "$project_dir/extension/stylesheet.css" "$extension_dir/stylesheet.css"
+install -m 644 "$project_dir/extension/fn-key-symbolic.svg" "$extension_dir/fn-key-symbolic.svg"
 install -m 644 "$project_dir/data/interface.xml" "$extension_dir/interface.xml"
 
 if gnome-extensions enable "$extension_id"; then

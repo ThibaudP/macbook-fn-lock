@@ -1,4 +1,3 @@
-import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
@@ -17,12 +16,11 @@ export default class AppleFnLockExtension extends Extension {
         this._pending = false;
         this._proxy = null;
         this._button = new PanelMenu.Button(0.0, 'MacBook Fn Lock');
-        const box = new St.BoxLayout({style_class: 'panel-status-menu-box'});
-        this._label = new St.Label({text: 'Fn …', y_align: Clutter.ActorAlign.CENTER});
-        this._icon = new St.Icon({icon_name: 'dialog-question-symbolic', style_class: 'system-status-icon'});
-        box.add_child(this._label);
-        box.add_child(this._icon);
-        this._button.add_child(box);
+        this._icon = new St.Icon({
+            gicon: new Gio.FileIcon({file: this.dir.get_child('fn-key-symbolic.svg')}),
+            style_class: 'system-status-icon apple-fn-lock-icon',
+        });
+        this._button.add_child(this._icon);
 
         this._switch = new PopupMenu.PopupSwitchMenuItem('Touches F1–F12 directes', false);
         this._switch.connect('toggled', (_item, locked) => this._setLocked(locked));
@@ -37,7 +35,8 @@ export default class AppleFnLockExtension extends Extension {
         const [ok, contents] = this.dir.get_child('interface.xml').load_contents(null);
         if (!ok)
             throw new Error('Cannot read Apple Fn Lock D-Bus interface');
-        const Proxy = Gio.DBus.makeProxyWrapper(new TextDecoder().decode(contents));
+        const makeProxyWrapper = Gio.DBusProxy.makeProxyWrapper ?? Gio.DBus.makeProxyWrapper;
+        const Proxy = makeProxyWrapper(new TextDecoder().decode(contents));
         const cancellable = this._cancellable;
         this._proxy = new Proxy(Gio.DBus.system, NAME, OBJECT_PATH, (proxy, error) => {
             if (cancellable.is_cancelled())
@@ -60,10 +59,8 @@ export default class AppleFnLockExtension extends Extension {
         const locked = available && Boolean(this._proxy.Locked);
         this._switch.setToggleState(locked);
         this._switch.sensitive = available && !this._pending;
-        this._label.text = available ? (locked ? 'F1–F12' : 'Fn') : 'Fn ?';
-        this._icon.icon_name = available
-            ? (locked ? 'changes-prevent-symbolic' : 'changes-allow-symbolic')
-            : 'dialog-question-symbolic';
+        this._icon.style_class = 'system-status-icon apple-fn-lock-icon' +
+            (available ? (locked ? ' apple-fn-lock-enabled' : '') : ' apple-fn-lock-unavailable');
         if (!online)
             this._status.label.text = 'Service Fn Lock arrêté';
         else if (!available)
@@ -120,7 +117,6 @@ export default class AppleFnLockExtension extends Extension {
         this._button = null;
         this._switch = null;
         this._status = null;
-        this._label = null;
         this._icon = null;
         this._cancellable = null;
         this._pending = false;

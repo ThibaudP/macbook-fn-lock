@@ -2,10 +2,10 @@
 
 Double-tap **Fn** to switch an Apple keyboard between media keys and **F1–F12**, with a GNOME top-bar indicator and menu switch.
 
-| Indicator | Press a top-row key | Hold Fn + top-row key |
+| Fn key icon | Press a top-row key | Hold Fn + top-row key |
 | --- | --- | --- |
-| `Fn` + unlocked icon | Volume, brightness, playback… | F1–F12 |
-| `F1–F12` + locked icon | F1–F12 | Volume, brightness, playback… |
+| Neutral | Volume, brightness, playback… | F1–F12 |
+| Blue | F1–F12 | Volume, brightness, playback… |
 
 The two short taps must finish within 500 ms. Holding Fn, using Fn with another key, or typing between taps cancels the gesture. Ordinary keyboard events continue to GNOME unchanged. The chosen mode is remembered across reboots.
 
@@ -32,7 +32,15 @@ The installer requests sudo once for the service. It installs the GNOME extensio
 gnome-extensions enable apple-fn-lock@thibaudp.github.io
 ```
 
-Look for `Fn` in the top bar. Open its menu to select F1–F12 directly, or double-tap Fn.
+Look for the small `fn` key icon in the top bar. Blue means Fn Lock is active. Open its menu to select F1–F12 directly, or double-tap Fn.
+
+To load or update the extension in the current session, press **Alt+F2**, enter `lg`, and run the following in the Evaluator, replacing `/path/to/macbook-fn-lock` with this checkout's absolute path:
+
+```js
+await (await import('file:///path/to/macbook-fn-lock/scripts/reload-in-shell.js')).reload()
+```
+
+Press Escape to close Looking Glass. This development helper loads the installed files without enabling D-Bus evaluation or restarting the session.
 
 ## Uninstall
 
@@ -59,7 +67,7 @@ cat /sys/module/hid_apple/parameters/fnmode
 gnome-extensions info apple-fn-lock@thibaudp.github.io
 ```
 
-`Fn ?` means the service or kernel driver is unavailable. If the menu says the keyboard was not detected, verify that it exposes `KEY_FN` and uses `hid_apple`; the menu switch can still change the driver's mode. A keyboard whose firmware hides Fn cannot provide the double-tap gesture through this implementation.
+An amber icon means the service or kernel driver is unavailable; the menu gives the reason. If the menu says the keyboard was not detected, verify that it exposes `KEY_FN` and uses `hid_apple`; the menu switch can still change the driver's mode. A keyboard whose firmware hides Fn cannot provide the double-tap gesture through this implementation.
 
 `swap_fn_leftctrl=1` changes which physical key emits `KEY_FN`; the gesture follows that emitted key. If you expect the physical Fn key, keep `swap_fn_leftctrl=0`.
 
