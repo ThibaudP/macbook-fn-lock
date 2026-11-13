@@ -1,0 +1,23 @@
+name: Bug report
+description: Report a gesture, service, or GNOME extension problem.
+body:
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: MacBook or keyboard model, distribution, GNOME version, and Wayland or X11.
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Include what you expected and steps to reproduce. For gesture failures, does the menu switch work?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant output
+      description: Extension state, service status, fnmode, or relevant journal errors.
+      render: text

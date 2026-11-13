@@ -28,8 +28,19 @@ install -m 644 "$project_dir/extension/fn-key-symbolic.svg" "$extension_dir/fn-k
 install -m 644 "$project_dir/data/interface.xml" "$extension_dir/interface.xml"
 
 if gnome-extensions enable "$extension_id"; then
-    echo 'MacBook Fn Lock installed. Look for Fn in the top bar and double-tap Fn.'
+    echo 'MacBook Fn Lock installed. Upgrades need a reload to apply the updated files.'
 else
-    echo 'Installed. Log out and back in, then run:'
-    echo "  gnome-extensions enable $extension_id"
+    echo 'Extension files installed. GNOME has not discovered the extension yet.'
 fi
+
+/usr/bin/python3 - "$project_dir" <<'PY'
+import json
+from pathlib import Path
+import sys
+
+helper = (Path(sys.argv[1]) / 'scripts/reload-in-shell.js').as_uri()
+print('\nTo activate or update now: Alt+F2, enter lg, then run in Evaluator:')
+print(f'  await (await import({json.dumps(helper)})).reload()')
+print('\nOr log out and back in, then run:')
+print('  gnome-extensions enable apple-fn-lock@thibaudp.github.io')
+PY

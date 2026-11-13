@@ -10,3 +10,11 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y python3-gi gjs libglib2.0-bin
       - run: make check
       - run: make package
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-packages
+          path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/SHA256SUMS
+          if-no-files-found: error

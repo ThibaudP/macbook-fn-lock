@@ -1,62 +1,111 @@
 # MacBook Fn Lock
 
-Double-tap **Fn** to switch an Apple keyboard between media keys and **F1–F12**, with a GNOME top-bar indicator and menu switch.
+[![Checks](https://github.com/ThibaudP/macbook-fn-lock/actions/workflows/check.yml/badge.svg)](https://github.com/ThibaudP/macbook-fn-lock/actions/workflows/check.yml)
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-| Fn key icon | Press a top-row key | Hold Fn + top-row key |
-| --- | --- | --- |
-| Neutral | Volume, brightness, playback… | F1–F12 |
-| Blue | F1–F12 | Volume, brightness, playback… |
+Double-tap **Fn** to switch between multimedia keys and **F1–F12** on your MacBook running Linux. A compact GNOME panel icon shows the current mode, and its menu lets you switch with a click.
 
-The two short taps must finish within 500 ms. Holding Fn, using Fn with another key, or typing between taps cancels the gesture. Ordinary keyboard events continue to GNOME unchanged. The chosen mode is remembered across reboots.
+<img src="docs/preview.svg" alt="Interface illustration: Fn Lock off with Multimedia mode, and Fn Lock on with F1-F12 mode." width="720">
 
-## Requirements
+*Interface illustration. The menu follows your GNOME theme.*
 
-- Linux with an Apple keyboard using the kernel's `hid_apple` driver and exposing `KEY_FN`.
-- GNOME Shell **51**, including Wayland sessions.
-- Python 3 with PyGObject (`python3-gi` on Ubuntu), systemd, D-Bus and polkit.
-- Administrator access for the small system service.
+| Mode | Press a top-row key | Hold Fn + top-row key | Icon |
+| --- | --- | --- | --- |
+| **Multimedia mode** | Volume, brightness, playback… | F1–F12 | Neutral |
+| **F1-F12 mode** | F1–F12 | Volume, brightness, playback… | Blue |
 
-Developed against a MacBookPro10,2 running Ubuntu 26.10 and GNOME Shell 51. Automated tests cover the gesture, state storage, input stream handling, D-Bus authorization and extension lifecycle. **Physical double-tap behavior and the live GNOME UI still require on-device validation.** Other Shell versions are not yet advertised as supported.
+- **Double-tap Fn** or use the **Fn Lock** switch.
+- The menu stays open when you change modes.
+- Your selected mode is restored after reboot.
+- Fn+arrows and Fn+Backspace keep their usual behavior.
+- No keyboard grabbing, replacement key events, or typed-text logging.
+
+## Compatibility
+
+The current release targets **GNOME Shell 51** on Linux, including Wayland. The desktop and service have been checked on a **MacBookPro10,2 with Ubuntu 26.10**. Other GNOME versions and MacBook models have not been verified yet.
+
+Your keyboard must use the kernel's **`hid_apple`** driver and expose **`KEY_FN`**. Keyboards that hide Fn in their firmware cannot provide the double-tap gesture. This does not target macOS or keyboards using a different driver.
+
+Dependencies: Python 3, PyGObject (`python3-gi` on Ubuntu), systemd, D-Bus, polkit, and administrator access to install the system service. If PyGObject is missing on Ubuntu:
+
+```sh
+sudo apt install python3-gi
+```
 
 ## Install
 
-Clone or download this repository, then run as your normal desktop user:
+Run the installer as your normal desktop user:
 
 ```sh
+git clone https://github.com/ThibaudP/macbook-fn-lock.git
+cd macbook-fn-lock
 ./install.sh
 ```
 
-The installer requests sudo once for the service. It installs the GNOME extension for your user and tries to enable it. If GNOME has not discovered the new extension, log out and back in, then run:
+The installer uses sudo for the system service and installs the extension for your user. The **extension ZIP alone is not sufficient**: the service is required for the keyboard gesture and mode changes.
+
+Alternatively, extract the complete source archive from a [GitHub release](https://github.com/ThibaudP/macbook-fn-lock/releases), enter its directory, and run `./install.sh`.
+
+### Activate without logging out
+
+GNOME may not discover a new extension immediately, and an upgrade keeps the previous JavaScript loaded until it is reloaded. To apply the installed files now:
+
+1. Press **Alt+F2**, enter **`lg`**, and press Enter.
+2. In **Evaluator**, run the following, replacing `/absolute/path/to/macbook-fn-lock` with the checkout or extracted source directory:
+
+   ```js
+   await (await import('file:///absolute/path/to/macbook-fn-lock/scripts/reload-in-shell.js')).reload()
+   ```
+
+3. Press **Escape** to close Looking Glass.
+
+This helper keeps the session running and does not enable D-Bus evaluation. You can instead log out and back in, then run:
 
 ```sh
 gnome-extensions enable apple-fn-lock@thibaudp.github.io
 ```
 
-Look for the small `fn` key icon in the top bar. Blue means Fn Lock is active. Open its menu to select F1–F12 directly, or double-tap Fn.
+### Use
 
-To load or update the extension in the current session, press **Alt+F2**, enter `lg`, and run the following in the Evaluator, replacing `/path/to/macbook-fn-lock` with this checkout's absolute path:
+Look for the small **fn** key icon in the top bar. Its menu contains:
 
-```js
-await (await import('file:///path/to/macbook-fn-lock/scripts/reload-in-shell.js')).reload()
+```text
+Fn Lock                                  [switch]
+Multimedia mode / F1-F12 mode
+────────────────────────────────────────────────
+Double tap Fn to change mode
 ```
 
-Press Escape to close Looking Glass. This development helper loads the installed files without enabling D-Bus evaluation or restarting the session.
+For the gesture, complete two short taps within **500 ms**. Holding Fn, pressing another key on the same keyboard, or typing between taps cancels it. An amber icon indicates an unavailable service or driver; the menu displays the reason.
+
+### Update
+
+From a Git checkout:
+
+```sh
+git pull --ff-only
+./install.sh
+```
+
+Then reload using Looking Glass as above, or log out and back in.
 
 ## Uninstall
+
+Run from the checkout or extracted source directory:
 
 ```sh
 ./uninstall.sh
 ```
 
-This removes the service, extension, D-Bus and polkit configuration, and saved state. It restores the kernel Fn mode recorded before the service's first run. No modprobe configuration or initramfs changes are made.
+This removes the service, extension, D-Bus and polkit configuration, and saved state. It restores the kernel Fn mode recorded before the service's first run. Installation does not modify modprobe configuration or rebuild the initramfs.
 
 ## How it works
 
-A system service observes Apple keyboard events through evdev and switches `/sys/module/hid_apple/parameters/fnmode` between `1` (media first) and `2` (F1–F12 first). It never grabs the keyboard or injects replacement key events. Fn+arrows and Fn+Backspace keep their normal kernel behavior.
+A small system service observes Apple keyboard events through evdev and switches `/sys/module/hid_apple/parameters/fnmode` between **1** (multimedia first) and **2** (F1–F12 first). It recognizes Fn taps and cancels gestures when another key is involved. Individual key events and typed text are not recorded, logged, or exported.
 
-The service reads key codes only to recognize Fn and cancel mixed-key gestures. It does not record, log or export typed text or individual key events. Users do not receive general access to input devices or permission to write kernel settings. Only the narrow `SetLocked(bool)` operation is exposed over the system bus; polkit permits it for an active local session. The GNOME extension displays the current mode and calls that operation.
+The extension reads mode changes from the service over D-Bus. Its only control operation is `SetLocked(bool)`, authorized by polkit for an active local session. Users do not need general access to input devices or permission to write kernel settings.
 
-Disconnects and dropped evdev events reset gesture detection. Newly connected Apple keyboards are discovered within about two seconds. The kernel setting applies to **all keyboards handled by `hid_apple`**, rather than one individual device. The service continues recognizing the gesture when the extension is disabled; stop the service to disable it entirely.
+Disconnects and dropped events reset gesture detection. Apple keyboards are rediscovered within about two seconds. The kernel setting applies to **all keyboards handled by `hid_apple`**. The service continues recognizing the gesture when the GNOME extension is disabled; stop `apple-fn-lock.service` to turn it off entirely.
 
 ## Troubleshooting
 
@@ -67,24 +116,27 @@ cat /sys/module/hid_apple/parameters/fnmode
 gnome-extensions info apple-fn-lock@thibaudp.github.io
 ```
 
-An amber icon means the service or kernel driver is unavailable; the menu gives the reason. If the menu says the keyboard was not detected, verify that it exposes `KEY_FN` and uses `hid_apple`; the menu switch can still change the driver's mode. A keyboard whose firmware hides Fn cannot provide the double-tap gesture through this implementation.
+- **No panel icon:** activate or reload the extension using the instructions above.
+- **Service unavailable:** check `systemctl status apple-fn-lock.service` and its journal.
+- **Keyboard not detected:** verify that the keyboard uses `hid_apple` and exposes `KEY_FN`. The menu switch may still change the driver's mode.
+- **Gesture follows the Control key:** `hid_apple.swap_fn_leftctrl=1` swaps the physical Fn and left Control keys. Keep it at `0` if you want the physical Fn key.
 
-`swap_fn_leftctrl=1` changes which physical key emits `KEY_FN`; the gesture follows that emitted key. If you expect the physical Fn key, keep `swap_fn_leftctrl=0`.
+Report compatibility results or problems in [GitHub Issues](https://github.com/ThibaudP/macbook-fn-lock/issues).
 
 ## Development
 
 ```sh
-make check
-make package
+./scripts/check.sh
+python3 scripts/package.py
 ```
 
-`make check` requires Python with PyGObject and GJS. Tests use temporary state files, synthetic input events and a simulated D-Bus connection. They do not access your keyboard or change its mode. The GJS harness validates the extension's lifecycle using simulated Shell widgets; it does not replace a test inside GNOME Shell. `make package` produces a source archive and an extension ZIP in `dist/`; the ZIP alone does not install the required service.
+`make check` and `make package` are equivalent if Make is installed. Checks require Python with PyGObject and GJS. Tests use temporary state files, synthetic events, and simulated Shell widgets; they do not access the keyboard or change its mode. A live GNOME session is still needed to verify appearance and interaction.
 
-Without Make, run `./scripts/check.sh` and `python3 scripts/package.py` directly.
+Packages are written to `dist/`: a versioned source archive, a GNOME extension ZIP, and `SHA256SUMS`. The explicit [MANIFEST](MANIFEST) controls source archive contents, so unlisted local files and caches are excluded.
 
-For the maintainer's initial public GitHub publication, commit the project and run `./scripts/publish.sh` after authenticating GitHub CLI with `gh auth login`. This creates a public `macbook-fn-lock` repository in the authenticated account and pushes the local commits. Subsequent updates use `git push`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development and release instructions and [CHANGELOG.md](CHANGELOG.md) for release history.
 
-Sources: [Linux hid-apple driver](https://code.googlesource.com/linux/torvalds/linux/+/7acf90feab8b009fde7def08ff2c622d0f10e99f/drivers/hid/hid-apple.c), [GNOME extension documentation](https://gjs.guide/extensions/), [polkit documentation](https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html).
+References: [Linux hid-apple driver](https://code.googlesource.com/linux/torvalds/linux/+/7acf90feab8b009fde7def08ff2c622d0f10e99f/drivers/hid/hid-apple.c), [GNOME extension documentation](https://gjs.guide/extensions/), [polkit documentation](https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html).
 
 ## License
 
