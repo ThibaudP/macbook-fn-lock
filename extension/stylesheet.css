@@ -1,6 +1,6 @@
 #panel .panel-button.apple-fn-lock-button {
-    -minimum-hpadding: 4px;
-    -natural-hpadding: 4px;
+    -minimum-hpadding: 0px;
+    -natural-hpadding: 0px;
 }
 
 .apple-fn-lock-icon {
