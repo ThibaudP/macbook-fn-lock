@@ -1,3 +1,8 @@
+#panel .panel-button.apple-fn-lock-button {
+    -minimum-hpadding: 4px;
+    -natural-hpadding: 4px;
+}
+
 .apple-fn-lock-icon {
     icon-size: 18px;
     opacity: 0.72;

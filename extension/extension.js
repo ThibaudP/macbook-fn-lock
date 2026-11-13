@@ -16,6 +16,7 @@ export default class AppleFnLockExtension extends Extension {
         this._pending = false;
         this._proxy = null;
         this._button = new PanelMenu.Button(0.0, 'MacBook Fn Lock');
+        this._button.style_class = 'panel-button apple-fn-lock-button';
         this._icon = new St.Icon({
             gicon: new Gio.FileIcon({file: this.dir.get_child('fn-key-symbolic.svg')}),
             style_class: 'system-status-icon apple-fn-lock-icon',
