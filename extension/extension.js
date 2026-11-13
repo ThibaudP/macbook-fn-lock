@@ -17,6 +17,8 @@ export default class AppleFnLockExtension extends Extension {
         this._proxy = null;
         this._button = new PanelMenu.Button(0.0, 'MacBook Fn Lock');
         this._button.style_class = 'panel-button apple-fn-lock-button';
+        // Changing the switch should leave the menu open, including with Enter.
+        this._button.menu.itemActivated = () => {};
         this._icon = new St.Icon({
             gicon: new Gio.FileIcon({file: this.dir.get_child('fn-key-symbolic.svg')}),
             style_class: 'system-status-icon apple-fn-lock-icon',

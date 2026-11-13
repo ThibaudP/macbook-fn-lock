@@ -25,14 +25,29 @@ class Widget extends Signals {
 }
 class Item extends Widget {
     constructor(text) { super(); this.label = {text}; }
+    activate(event) { this.emit('activate', event); }
 }
 class Switch extends Item {
     setToggleState(state) { this.state = state; }
+    activate(event) {
+        this.state = !this.state;
+        this.emit('toggled', this.state);
+        super.activate(event);
+    }
 }
 class Button extends Widget {
     constructor() {
         super();
-        this.menu = {items: [], addMenuItem(item) { this.items.push(item); }};
+        this.menu = {
+            items: [], isOpen: false,
+            open() { this.isOpen = true; },
+            close() { this.isOpen = false; },
+            itemActivated() { this.close(); },
+            addMenuItem(item) {
+                this.items.push(item);
+                item.connect('activate', () => this.itemActivated());
+            },
+        };
     }
 }
 const queue = [];
@@ -101,11 +116,14 @@ lastProxy.Locked = true;
 lastProxy.emit('g-properties-changed');
 assert(extension._icon.style_class.includes('enabled'), 'Locked icon receives accent color');
 assert(extension._switch.state, 'Switch follows external double-tap');
-extension._switch.emit('toggled', false);
+extension._button.menu.open();
+extension._switch.activate({});
+assert(extension._button.menu.isOpen, 'Activating the switch leaves the dropdown open');
 assert(lastProxy.lastCall[0] === 'SetLocked' && lastProxy.lastCall[1][0] === false, 'Narrow D-Bus write');
 assert(!extension._switch.sensitive, 'No concurrent writes while pending');
 queue.shift()();
 assert(extension._switch.sensitive, 'Switch reenabled after completion');
+assert(extension._button.menu.isOpen, 'The dropdown stays open after the mode change completes');
 lastProxy.KeyboardConnected = false;
 lastProxy.emit('g-properties-changed');
 assert(extension._status.label.text.includes('non détecté'), 'Missing keyboard status');

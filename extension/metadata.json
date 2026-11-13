@@ -3,6 +3,6 @@
   "name": "MacBook Fn Lock",
   "description": "Double-tap Fn to switch between media keys and F1–F12 on Apple keyboards. Includes a top-bar indicator and switch. Requires the bundled system service.",
   "shell-version": ["51"],
-  "version": 5,
+  "version": 6,
   "url": "https://github.com/ThibaudP/macbook-fn-lock"
 }
