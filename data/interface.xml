@@ -1,0 +1,11 @@
+<node>
+  <interface name="org.gnome.Shell.Extensions.AppleFnLock">
+    <method name="SetLocked">
+      <arg name="locked" type="b" direction="in"/>
+    </method>
+    <property name="Locked" type="b" access="read"/>
+    <property name="Mode" type="i" access="read"/>
+    <property name="Available" type="b" access="read"/>
+    <property name="KeyboardConnected" type="b" access="read"/>
+  </interface>
+</node>
