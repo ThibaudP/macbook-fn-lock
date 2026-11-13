@@ -28,12 +28,12 @@ export default class AppleFnLockExtension extends Extension {
         this._switch = new PopupMenu.PopupSwitchMenuItem('Fn Lock', false);
         this._switch.connect('toggled', (_item, locked) => this._setLocked(locked));
         this._button.menu.addMenuItem(this._switch);
-        this._mode = new PopupMenu.PopupMenuItem('Mode multimédia', {reactive: false, can_focus: false});
+        this._mode = new PopupMenu.PopupMenuItem('Multimedia mode', {reactive: false, can_focus: false});
         this._button.menu.addMenuItem(this._mode);
-        this._status = new PopupMenu.PopupMenuItem('Connexion au service…', {reactive: false, can_focus: false});
+        this._status = new PopupMenu.PopupMenuItem('Connecting to service…', {reactive: false, can_focus: false});
         this._button.menu.addMenuItem(this._status);
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._button.menu.addMenuItem(new PopupMenu.PopupMenuItem('Double appui sur Fn pour changer de mode', {reactive: false, can_focus: false}));
+        this._button.menu.addMenuItem(new PopupMenu.PopupMenuItem('Double tap Fn to change mode', {reactive: false, can_focus: false}));
         Main.panel.addToStatusArea(this.uuid, this._button);
         this._sync();
 
@@ -48,7 +48,7 @@ export default class AppleFnLockExtension extends Extension {
                 return;
             if (error) {
                 console.error(`Apple Fn Lock: ${error.message}`);
-                this._status.label.text = 'Service inaccessible';
+                this._status.label.text = 'Service unavailable';
                 return;
             }
             this._proxy = proxy;
@@ -62,7 +62,7 @@ export default class AppleFnLockExtension extends Extension {
         const online = Boolean(this._proxy?.g_name_owner);
         const available = online && Boolean(this._proxy.Available);
         const locked = available && Boolean(this._proxy.Locked);
-        this._mode.label.text = locked ? 'Mode F1-F12' : 'Mode multimédia';
+        this._mode.label.text = locked ? 'F1-F12 mode' : 'Multimedia mode';
         this._mode.visible = available;
         this._switch.setToggleState(locked);
         this._switch.sensitive = available && !this._pending;
@@ -71,18 +71,18 @@ export default class AppleFnLockExtension extends Extension {
         this._icon.style_class = 'system-status-icon apple-fn-lock-icon' +
             (available ? (locked ? ' apple-fn-lock-enabled' : '') : ' apple-fn-lock-unavailable');
         if (!online)
-            this._status.label.text = 'Service Fn Lock arrêté';
+            this._status.label.text = 'Fn Lock service stopped';
         else if (!available)
-            this._status.label.text = 'Pilote Apple indisponible';
+            this._status.label.text = 'Apple keyboard driver unavailable';
         else if (!this._proxy.KeyboardConnected)
-            this._status.label.text = 'Double appui indisponible : clavier non détecté';
+            this._status.label.text = 'Keyboard not detected';
         else if (this._proxy.Mode === 0)
-            this._status.label.text = 'Fn désactivée dans le pilote';
+            this._status.label.text = 'Fn disabled by keyboard driver';
         else if (this._proxy.Mode === 4)
-            this._status.label.text = 'Touches multimédias uniquement';
+            this._status.label.text = 'Multimedia keys only';
         this._button.accessible_name = available
-            ? (locked ? 'Fn Lock activé : F1 à F12' : 'Fn Lock désactivé : multimédia')
-            : 'Fn Lock indisponible';
+            ? (locked ? 'Fn Lock on, F1-F12 mode' : 'Fn Lock off, Multimedia mode')
+            : 'Fn Lock unavailable';
     }
 
     _setLocked(locked) {

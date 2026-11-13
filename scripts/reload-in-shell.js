@@ -24,5 +24,5 @@ export async function reload() {
     manager._changeExtensionState(current, ExtensionState.INACTIVE);
     manager.enableExtension(uuid);
     await manager._callExtensionEnable(uuid);
-    return current.state === ExtensionState.ACTIVE ? 'MacBook Fn Lock actif' : current.error;
+    return current.state === ExtensionState.ACTIVE ? 'MacBook Fn Lock active' : current.error;
 }

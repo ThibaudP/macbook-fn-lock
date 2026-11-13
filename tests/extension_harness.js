@@ -126,7 +126,7 @@ assert(extension._switch.sensitive, 'Switch reenabled after completion');
 assert(extension._button.menu.isOpen, 'The dropdown stays open after the mode change completes');
 lastProxy.KeyboardConnected = false;
 lastProxy.emit('g-properties-changed');
-assert(extension._status.label.text.includes('non détecté'), 'Missing keyboard status');
+assert(extension._status.label.text.includes('not detected'), 'Missing keyboard status');
 lastProxy.g_name_owner = null;
 lastProxy.emit('notify::g-name-owner');
 assert(extension._icon.style_class.includes('unavailable'), 'Service disappearance reflected');
