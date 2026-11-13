@@ -22,13 +22,13 @@ export default class AppleFnLockExtension extends Extension {
         });
         this._button.add_child(this._icon);
 
-        this._switch = new PopupMenu.PopupSwitchMenuItem('Touches F1–F12 directes', false);
+        this._switch = new PopupMenu.PopupSwitchMenuItem('Mode multimédia', false);
         this._switch.connect('toggled', (_item, locked) => this._setLocked(locked));
         this._button.menu.addMenuItem(this._switch);
         this._status = new PopupMenu.PopupMenuItem('Connexion au service…', {reactive: false, can_focus: false});
         this._button.menu.addMenuItem(this._status);
         this._button.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
-        this._button.menu.addMenuItem(new PopupMenu.PopupMenuItem('Basculer : double appui sur Fn', {reactive: false, can_focus: false}));
+        this._button.menu.addMenuItem(new PopupMenu.PopupMenuItem('Double appui sur Fn pour changer de mode', {reactive: false, can_focus: false}));
         Main.panel.addToStatusArea(this.uuid, this._button);
         this._sync();
 
@@ -57,8 +57,11 @@ export default class AppleFnLockExtension extends Extension {
         const online = Boolean(this._proxy?.g_name_owner);
         const available = online && Boolean(this._proxy.Available);
         const locked = available && Boolean(this._proxy.Locked);
+        this._switch.label.text = locked ? 'Mode F1-F12' : 'Mode multimédia';
         this._switch.setToggleState(locked);
         this._switch.sensitive = available && !this._pending;
+        this._status.visible = !available || !this._proxy.KeyboardConnected ||
+            this._proxy.Mode === 0 || this._proxy.Mode === 4;
         this._icon.style_class = 'system-status-icon apple-fn-lock-icon' +
             (available ? (locked ? ' apple-fn-lock-enabled' : '') : ' apple-fn-lock-unavailable');
         if (!online)
@@ -71,8 +74,6 @@ export default class AppleFnLockExtension extends Extension {
             this._status.label.text = 'Fn désactivée dans le pilote';
         else if (this._proxy.Mode === 4)
             this._status.label.text = 'Touches multimédias uniquement';
-        else
-            this._status.label.text = locked ? 'Fn + F1–F12 : multimédia' : 'Fn + touche multimédia : F1–F12';
         this._button.accessible_name = available
             ? (locked ? 'Fn Lock activé : F1 à F12' : 'Fn Lock désactivé : multimédia')
             : 'Fn Lock indisponible';
